@@ -1,0 +1,47 @@
+{
+  "project_info": {
+    "project_number": "487831381830",
+    "project_id": "event-spoofer",
+    "storage_bucket": "event-spoofer.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:487831381830:android:96ee26b036f92dd3da2747",
+        "android_client_info": {
+          "package_name": "com.example.sda_event_spoofer"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "487831381830-0174u3naid2on22mp6qpl1figvor7ajq.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.example.sda_event_spoofer",
+            "certificate_hash": "2b125d996a00936bc6c964a83f9224b26fa0a842"
+          }
+        },
+        {
+          "client_id": "487831381830-gihdjkncqq94b8l6vs8mos5baqk7b43j.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDBNb1FJMyK_S5WnnUwIM2FdIF_1NrEysA"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "487831381830-gihdjkncqq94b8l6vs8mos5baqk7b43j.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
