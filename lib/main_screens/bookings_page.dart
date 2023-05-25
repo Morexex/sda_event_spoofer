@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:sda_event_spoofer/main_screens/general_screens/general_screen.dart';
 
 import '../widgets/appbar_widgets.dart';
 

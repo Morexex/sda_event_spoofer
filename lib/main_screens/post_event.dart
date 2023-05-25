@@ -4,6 +4,7 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import '../minor_screens/add_address.dart';
+import '../widgets/appbar_widgets.dart';
 
 class PostEvent extends StatefulWidget {
   const PostEvent({super.key});
@@ -48,7 +49,11 @@ class _PostEventState extends State<PostEvent> {
       return ListView.builder(
           itemCount: imagesFileList!.length,
           itemBuilder: (context, index) {
-            return Image.file(File(imagesFileList![index].path,),fit: BoxFit.cover);
+            return Image.file(
+                File(
+                  imagesFileList![index].path,
+                ),
+                fit: BoxFit.cover);
           });
     } else {
       return const Center(
@@ -64,119 +69,122 @@ class _PostEventState extends State<PostEvent> {
   @override
   Widget build(BuildContext context) {
     var size = MediaQuery.of(context).size;
-    return ScaffoldMessenger(
-      key: _scafoldKey,
-      child: Scaffold(
-        body: SafeArea(
-          child: SingleChildScrollView(
-            reverse: true,
-            keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
-            child: Form(
-              key: _formKey,
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.center,
-                children: [
-                  Container(
-                    //color: Colors.blueGrey.shade100,
-                    height: size.width * 0.5,
-                    width: size.width * 0.5,
-                    decoration: BoxDecoration(borderRadius: BorderRadius.circular(25),color: Colors.amberAccent.withOpacity(0.6)),
-                    child: imagesFileList != null
-                        ? previewImages()
-                        : const Center(
-                            child: Text(
-                              'You have not \n \n picked Image yet!',
-                              style: TextStyle(fontSize: 16),
-                              textAlign: TextAlign.center,
-                            ),
-                          ),
-                  ),
-                  const SizedBox(
-                    height: 30,
-                    child: Divider(
-                      color: Colors.teal,
-                      thickness: 2,
-                    ),
-                  ),
-                  Padding(
-                    padding: const EdgeInsets.all(8.0),
-                    child: SizedBox(
-                      width: MediaQuery.of(context).size.width,
-                      child: TextFormField(
-                          validator: (value) {
-                            if (value!.isEmpty) {
-                              return 'please enter product name';
-                            }
-                            return null;
-                          },
-                          onSaved: (value) {
-                            eveName = value!;
-                          },
-                          maxLength: 100,
-                          maxLines: 3,
-                          decoration: textFormDecoration.copyWith(
-                            labelText: 'Event Name',
-                            hintText: 'Enter Event Name',
-                          )),
-                    ),
-                  ),
-                  Padding(
-                    padding: const EdgeInsets.all(8.0),
-                    child: SizedBox(
-                      width: MediaQuery.of(context).size.width,
-                      child: TextFormField(
-                          validator: (value) {
-                            if (value!.isEmpty) {
-                              return 'please enter event description';
-                            }
-                            return null;
-                          },
-                          onSaved: (value) {
-                            eveDesc = value!;
-                          },
-                          maxLength: 800,
-                          maxLines: 5,
-                          decoration: textFormDecoration.copyWith(
-                            labelText: 'Event Descriprion',
-                            hintText: 'Enter Event Description',
-                          )),
-                    ),
-                  ),
-                ],
+    return Scaffold(
+      appBar: AppBar(
+        leading: const AppBarBackButton(),
+        elevation: 0,
+        backgroundColor: Colors.white,
+        title: const AppBarTitle(
+          title: 'Post Event',
+        ),
+      ),
+      body: SafeArea(
+        child: Form(
+          key: _formKey,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: [
+              Container(
+                //color: Colors.blueGrey.shade100,
+                height: size.width * 0.5,
+                width: size.width * 0.5,
+                decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(25),
+                    color: Colors.amberAccent.withOpacity(0.6)),
+                child: imagesFileList != null
+                    ? previewImages()
+                    : const Center(
+                        child: Text(
+                          'You have not \n \n picked Image yet!',
+                          style: TextStyle(fontSize: 16),
+                          textAlign: TextAlign.center,
+                        ),
+                      ),
               ),
-            ),
+              const SizedBox(
+                height: 30,
+                child: Divider(
+                  color: Colors.teal,
+                  thickness: 2,
+                ),
+              ),
+              Padding(
+                padding: const EdgeInsets.all(8.0),
+                child: SizedBox(
+                  width: MediaQuery.of(context).size.width,
+                  child: TextFormField(
+                      validator: (value) {
+                        if (value!.isEmpty) {
+                          return 'please enter product name';
+                        }
+                        return null;
+                      },
+                      onSaved: (value) {
+                        eveName = value!;
+                      },
+                      maxLength: 100,
+                      maxLines: 3,
+                      decoration: textFormDecoration.copyWith(
+                        labelText: 'Event Name',
+                        hintText: 'Enter Event Name',
+                      )),
+                ),
+              ),
+              Padding(
+                padding: const EdgeInsets.all(8.0),
+                child: SizedBox(
+                  width: MediaQuery.of(context).size.width,
+                  child: TextFormField(
+                      validator: (value) {
+                        if (value!.isEmpty) {
+                          return 'please enter event description';
+                        }
+                        return null;
+                      },
+                      onSaved: (value) {
+                        eveDesc = value!;
+                      },
+                      maxLength: 800,
+                      maxLines: 5,
+                      decoration: textFormDecoration.copyWith(
+                        labelText: 'Event Descriprion',
+                        hintText: 'Enter Event Description',
+                      )),
+                ),
+              ),
+            ],
           ),
         ),
-        floatingActionButton: Row(
-          mainAxisAlignment: MainAxisAlignment.end,
-          children: [
-            Padding(
-              padding: const EdgeInsets.only(right: 10),
-              child: FloatingActionButton(
-                onPressed: imagesFileList!.isEmpty
-                    ? () {
-                        pickProductImages();
-                      }
-                    : () {
-                        setState(() {
-                          imagesFileList = [];
-                        });
-                      },
-                backgroundColor: Colors.teal,
-                child: imagesFileList!.isEmpty
-                    ? const Icon(Icons.photo_library)
-                    : const Icon(Icons.delete_forever),
-              ),
-            ),
-            FloatingActionButton(
-              onPressed: processing == true ? null : () {},
+      ),
+      floatingActionButton: Row(
+        mainAxisAlignment: MainAxisAlignment.end,
+        children: [
+          Padding(
+            padding: const EdgeInsets.only(right: 10),
+            child: FloatingActionButton(
+              onPressed: imagesFileList!.isEmpty
+                  ? () {
+                      pickProductImages();
+                    }
+                  : () {
+                      setState(() {
+                        imagesFileList = [];
+                      });
+                    },
               backgroundColor: Colors.teal,
-              child: processing == true
-                  ? const CircularProgressIndicator()
-                  : const Icon(Icons.upload),
-            )
-          ],
-        ),
+              child: imagesFileList!.isEmpty
+                  ? const Icon(Icons.photo_library)
+                  : const Icon(Icons.delete_forever),
+            ),
+          ),
+          FloatingActionButton(
+            onPressed: processing == true ? null : () {},
+            backgroundColor: Colors.teal,
+            child: processing == true
+                ? const CircularProgressIndicator()
+                : const Icon(Icons.upload),
+          )
+        ],
       ),
     );
   }

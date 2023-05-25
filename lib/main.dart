@@ -6,8 +6,11 @@ import 'package:sda_event_spoofer/auth/supplier_signup.dart';
 import 'main_screens/general_screens/general_screen.dart';
 import 'main_screens/service_providers/services_screen.dart';
 import 'main_screens/welcome_screen.dart';
+import 'package:firebase_core/firebase_core.dart';
 
-void main() {
+void main()async {
+  WidgetsFlutterBinding.ensureInitialized();
+  await Firebase.initializeApp();
   runApp(const MyApp());
 }
 

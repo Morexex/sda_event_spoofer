@@ -163,7 +163,7 @@ class _EventsPageScreenState extends State<EventsPageScreen> {
       }),
       floatingActionButton: FloatingActionButton(
         onPressed: (){
-          Navigator.pushReplacement(context, MaterialPageRoute(builder: (context)=> const PostEvent()));
+          Navigator.push(context, MaterialPageRoute(builder: (context)=> const PostEvent()));
         },
         backgroundColor: Colors.amber,
         hoverColor: Colors.tealAccent,

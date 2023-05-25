@@ -1,10 +1,7 @@
 import 'package:animated_text_kit/animated_text_kit.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
-import 'package:sda_event_spoofer/auth/supplier_login.dart';
 import 'package:sda_event_spoofer/widgets/big_text.dart';
-
-import '../auth/general_login.dart';
-
 
 const textColor = [
   Colors.amber,
@@ -25,32 +22,34 @@ class WelcomeScreen extends StatefulWidget {
 }
 
 class _WelcomeScreenState extends State<WelcomeScreen> {
+  bool processing = false;
   @override
   Widget build(BuildContext context) {
     return Container(
-      decoration:const  BoxDecoration(image: DecorationImage(image: AssetImage("images/inapp/cover2.jpg"),fit: BoxFit.cover)),
+      decoration: const BoxDecoration(
+          image: DecorationImage(
+              image: AssetImage("images/inapp/cover2.jpg"), fit: BoxFit.cover)),
       child: Scaffold(
         backgroundColor: Colors.transparent,
         body: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             AnimatedTextKit(
-                animatedTexts: [
-                  ColorizeAnimatedText(
-                    'WELCOME TO',
-                    textStyle: textStyle,
-                    colors: textColor,
-                  ),
-                  ColorizeAnimatedText(
-                    'EVENT SPOOFER',
-                    textStyle: textStyle,
-                    colors: textColor,
-                  )
-                ],
-                isRepeatingAnimation: true,
-                repeatForever: true,
-              ),
-
+              animatedTexts: [
+                ColorizeAnimatedText(
+                  'WELCOME TO',
+                  textStyle: textStyle,
+                  colors: textColor,
+                ),
+                ColorizeAnimatedText(
+                  'EVENT SPOOFER',
+                  textStyle: textStyle,
+                  colors: textColor,
+                )
+              ],
+              isRepeatingAnimation: true,
+              repeatForever: true,
+            ),
             const SizedBox(
               height: 120,
             ),
@@ -71,11 +70,13 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
                           child: MaterialButton(
                             minWidth: MediaQuery.of(context).size.width * 0.6,
                             onPressed: () {
-                              Navigator.pushReplacementNamed(context, '/generalLogin_screen');
+                              Navigator.pushReplacementNamed(
+                                  context, '/generalLogin_screen');
                             },
                             child: const Text(
                               'Get Started',
-                              style: TextStyle(fontSize: 18, color: Colors.white),
+                              style:
+                                  TextStyle(fontSize: 18, color: Colors.white),
                             ),
                           ),
                         ),
@@ -85,11 +86,13 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
                           child: MaterialButton(
                             minWidth: MediaQuery.of(context).size.width * 0.6,
                             onPressed: () {
-                              Navigator.pushReplacementNamed(context, '/supplierLogin_screen');
+                              Navigator.pushReplacementNamed(
+                                  context, '/supplierLogin_screen');
                             },
                             child: const Text(
                               'Services Providers Only',
-                              style: TextStyle(fontSize: 18, color: Colors.white),
+                              style:
+                                  TextStyle(fontSize: 18, color: Colors.white),
                             ),
                           ),
                         ),
@@ -97,6 +100,56 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
                     )),
               ),
             ),
+            processing == true
+                ? const CircularProgressIndicator()
+                : SocialMediaButtons(
+                    label: 'Guest',
+                    onPressed: () async {
+                      setState(() {
+                        processing = true;
+                      });
+                      await FirebaseAuth.instance.signInAnonymously();
+                      await Future.delayed(const Duration(microseconds: 100))
+                          .whenComplete(() => Navigator.pushReplacementNamed(
+                              context, '/general_home'));
+                    },
+                    child: const Image(
+                      image: AssetImage('images/inapp/guest.jpg'),
+                    ),
+                  )
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class SocialMediaButtons extends StatelessWidget {
+  final String label;
+  final Function() onPressed;
+  final Widget child;
+  const SocialMediaButtons({
+    super.key,
+    required this.label,
+    required this.onPressed,
+    required this.child,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(
+        vertical: 8,
+      ),
+      child: InkWell(
+        onTap: onPressed,
+        child: Column(
+          children: [
+            SizedBox(height: 50, width: 50, child: child),
+            Text(
+              label,
+              style: const TextStyle(color: Colors.white),
+            )
           ],
         ),
       ),

@@ -1,10 +1,12 @@
 // ignore_for_file: avoid_print
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
-import 'package:sda_event_spoofer/auth/supplier_signup.dart';
-import 'package:sda_event_spoofer/main_screens/service_providers/services_screen.dart';
 import 'package:sda_event_spoofer/widgets/authentication_widgets.dart';
 import 'package:sda_event_spoofer/widgets/big_text.dart';
 import 'package:sda_event_spoofer/widgets/repeated_button_widget.dart';
+
+import '../widgets/snackbar.dart';
 
 class SupplierLoginScreen extends StatefulWidget {
   const SupplierLoginScreen({super.key});
@@ -14,6 +16,24 @@ class SupplierLoginScreen extends StatefulWidget {
 }
 
 class _CustomerRegisterScreenState extends State<SupplierLoginScreen> {
+
+  CollectionReference suppliers =
+      FirebaseFirestore.instance.collection("suppliers");
+
+  Future<bool> checkIfDocumentExists(String docId) async {
+    try {
+      var doc = await suppliers.doc(docId).get();
+      return doc.exists;
+    } catch (e) {
+      return false;
+    }
+  }
+
+  bool docExists = false;
+
+  void navigate() {
+    Navigator.pushReplacementNamed(context, '/services_home');
+  }
   late String email;
   late String password;
   final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
@@ -22,6 +42,44 @@ class _CustomerRegisterScreenState extends State<SupplierLoginScreen> {
   bool passwordVisible = true;
   bool processing = false;
   bool sendEmailVerification = false;
+
+  void logIn() async {
+    setState(() {
+      processing = true;
+    });
+    if (_formKey.currentState!.validate()) {
+      try {
+        await FirebaseAuth.instance
+            .signInWithEmailAndPassword(email: email, password: password);
+        _formKey.currentState!.reset();
+        await Future.delayed(const Duration(microseconds: 100)).whenComplete(
+            () => Navigator.pushReplacementNamed(context, '/services_home'));
+      } on FirebaseAuthException catch (e) {
+        if (e.code == 'user-not-found') {
+          setState(() {
+            processing = false;
+          });
+          MyMessageHandler.showSnackbar(
+              _scafoldKey, 'No user for that email!');
+        } else if (e.code == 'wrong-password') {
+          setState(() {
+            processing = false;
+          });
+          MyMessageHandler.showSnackbar(
+              _scafoldKey, 'Wrong password please try again!');
+        }
+        setState(() {
+          processing = false;
+        });
+        MyMessageHandler.showSnackbar(_scafoldKey, e.message.toString());
+      }
+    } else {
+      setState(() {
+        processing = false;
+      });
+      MyMessageHandler.showSnackbar(_scafoldKey, 'Please fill all fields');
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -129,7 +187,7 @@ class _CustomerRegisterScreenState extends State<SupplierLoginScreen> {
                           : AuthMainButton(
                               mainButtonLabel: 'Log In',
                               onPressed: () {
-                                Navigator.pushReplacementNamed(context, '/services_home');
+                                logIn();
                               },
                             ),
                     ],

@@ -1,12 +1,14 @@
 // ignore_for_file: avoid_print
 
 import 'dart:io';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
-import 'package:path/path.dart';
 import 'package:sda_event_spoofer/auth/general_login.dart';
 import 'package:sda_event_spoofer/widgets/authentication_widgets.dart';
 import 'package:sda_event_spoofer/widgets/snackbar.dart';
+import 'package:firebase_storage/firebase_storage.dart' as firebase_storage;
 
 class GeneralRegisterScreen extends StatefulWidget {
   const GeneralRegisterScreen({super.key});
@@ -28,6 +30,9 @@ class _GeneralRegisterScreenState extends State<GeneralRegisterScreen> {
   bool processing = false;
   XFile? _imageFile;
   dynamic _pickedImageError;
+
+  CollectionReference genusers =
+      FirebaseFirestore.instance.collection("genusers");
 
   final ImagePicker _picker = ImagePicker();
 
@@ -64,6 +69,65 @@ class _GeneralRegisterScreenState extends State<GeneralRegisterScreen> {
         _pickedImageError = e;
       });
       print(_pickedImageError);
+    }
+  }
+
+  void signUp() async {
+    setState(() {
+      processing = true;
+    });
+    if (_formKey.currentState!.validate()) {
+      if (_imageFile != null) {
+        try {
+          await FirebaseAuth.instance
+              .createUserWithEmailAndPassword(email: email, password: password);
+
+          firebase_storage.Reference ref = firebase_storage
+              .FirebaseStorage.instance
+              .ref('genusers-images/$email.jpg');
+
+          await ref.putFile(File(_imageFile!.path));
+          _uid = FirebaseAuth.instance.currentUser!.uid;
+
+          profileImage = await ref.getDownloadURL();
+          await genusers.doc(_uid).set({
+            'name': name,
+            'email': email,
+            'profileimage': profileImage,
+            'phone': '',
+            'address': '',
+            'gid': _uid,
+          });
+          processing = true;
+          _formKey.currentState!.reset();
+          setState(() {
+            _imageFile = null;
+          });
+          await Future.delayed(const Duration(microseconds: 100)).whenComplete(
+              () => Navigator.pushReplacementNamed(context, '/general_home'));
+        } on FirebaseAuthException catch (e) {
+          if (e.code == 'weak-password') {
+            MyMessageHandler.showSnackbar(scafoldKey, 'Password too weak');
+          } else if (e.code == 'email-already-in-use') {
+            setState(() {
+              processing = false;
+            });
+            MyMessageHandler.showSnackbar(
+                scafoldKey, 'email for that account already exist');
+          }
+        }
+      } else {
+        setState(() {
+          processing = false;
+        });
+        MyMessageHandler.showSnackbar(scafoldKey, 'Please pick an image');
+      }
+    } else {
+      setState(() {
+        processing = false;
+      });
+      MyMessageHandler.showSnackbar(
+          scafoldKey, 'Please fill in all the fields');
     }
   }
 
@@ -233,25 +297,7 @@ class _GeneralRegisterScreenState extends State<GeneralRegisterScreen> {
                           : AuthMainButton(
                               mainButtonLabel: 'Sign Up',
                               onPressed: () {
-                                if (_formKey.currentState!.validate()) {
-                                  if (_imageFile != null) {
-                                    Navigator.pushReplacement(
-                                        context,
-                                        MaterialPageRoute(
-                                            builder: (context) =>
-                                                const GeneralLoginScreen()));
-                                    _formKey.currentState!.reset();
-                                    setState(() {
-                                      _imageFile = null;
-                                    });
-                                  } else {
-                                    MyMessageHandler.showSnackbar(
-                                        scafoldKey, 'Please pick an image');
-                                  }
-                                } else {
-                                  MyMessageHandler.showSnackbar(scafoldKey,
-                                      'Please fill in all the fields');
-                                }
+                                signUp();
                               },
                             ),
                     ],

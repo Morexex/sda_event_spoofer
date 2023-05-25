@@ -1,8 +1,12 @@
 // ignore_for_file: avoid_print
 
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:sda_event_spoofer/widgets/authentication_widgets.dart';
 import 'package:sda_event_spoofer/widgets/repeated_button_widget.dart';
+
+import '../widgets/snackbar.dart';
 
 class GeneralLoginScreen extends StatefulWidget {
   const GeneralLoginScreen({super.key});
@@ -12,6 +16,24 @@ class GeneralLoginScreen extends StatefulWidget {
 }
 
 class _GeneralLoginScreenState extends State<GeneralLoginScreen> {
+  CollectionReference genusers=
+      FirebaseFirestore.instance.collection("genusers");
+
+  Future<bool> checkIfDocumentExists(String docId) async {
+    try {
+      var doc = await genusers.doc(docId).get();
+      return doc.exists;
+    } catch (e) {
+      return false;
+    }
+  }
+
+  bool docExists = false;
+
+  void navigate() {
+    Navigator.pushReplacementNamed(context, '/general_home');
+  }
+
   late String email;
   late String password;
   final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
@@ -20,6 +42,44 @@ class _GeneralLoginScreenState extends State<GeneralLoginScreen> {
   bool passwordVisible = true;
   bool processing = false;
   bool sendEmailVerification = false;
+
+  void logIn() async {
+    setState(() {
+      processing = true;
+    });
+    if (_formKey.currentState!.validate()) {
+      try {
+        await FirebaseAuth.instance
+            .signInWithEmailAndPassword(email: email, password: password);
+        _formKey.currentState!.reset();
+        await Future.delayed(const Duration(microseconds: 100)).whenComplete(
+            () => Navigator.pushReplacementNamed(context, '/general_home'));
+      } on FirebaseAuthException catch (e) {
+        if (e.code == 'user-not-found') {
+          setState(() {
+            processing = false;
+          });
+          MyMessageHandler.showSnackbar(
+              _scafoldKey, 'No user for that email!');
+        } else if (e.code == 'wrong-password') {
+          setState(() {
+            processing = false;
+          });
+          MyMessageHandler.showSnackbar(
+              _scafoldKey, 'Wrong password please try again!');
+        }
+        setState(() {
+          processing = false;
+        });
+        MyMessageHandler.showSnackbar(_scafoldKey, e.message.toString());
+      }
+    } else {
+      setState(() {
+        processing = false;
+      });
+      MyMessageHandler.showSnackbar(_scafoldKey, 'Please fill all fields');
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -118,7 +178,8 @@ class _GeneralLoginScreenState extends State<GeneralLoginScreen> {
                         haveAccount: 'Dont have an account? ',
                         actionLabel: 'Sign Up',
                         onPressed: () {
-                          Navigator.pushReplacementNamed(context, '/generalSignup_screen');
+                          Navigator.pushReplacementNamed(
+                              context, '/generalSignup_screen');
                         },
                       ),
                       processing == true
@@ -128,7 +189,7 @@ class _GeneralLoginScreenState extends State<GeneralLoginScreen> {
                           : AuthMainButton(
                               mainButtonLabel: 'Log In',
                               onPressed: () {
-                                Navigator.pushReplacementNamed(context, '/general_home');
+                                logIn();
                               },
                             ),
                       divider(),
