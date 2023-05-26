@@ -1,10 +1,16 @@
 // ignore_for_file: avoid_print
 
 import 'dart:io';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
-
+import 'package:firebase_storage/firebase_storage.dart' as firebase_storage;
+import 'package:uuid/uuid.dart';
 import '../../utilities/cat_list.dart';
+import 'package:path/path.dart' as path;
+
+import '../../widgets/snackbar.dart';
 
 class UploadProductScreen extends StatefulWidget {
   const UploadProductScreen({super.key});
@@ -19,10 +25,9 @@ class _UploadProductScreenState extends State<UploadProductScreen> {
       GlobalKey<ScaffoldMessengerState>();
 
   late double price;
-  late int quantity;
-  late String proName;
-  late String proDesc;
-  late String proId;
+  late String serName;
+  late String serDesc;
+  late String serId;
   int? discount = 0;
   String mainCategValue = 'select category';
   String subCategValue = 'subcategory';
@@ -94,6 +99,79 @@ class _UploadProductScreenState extends State<UploadProductScreen> {
       mainCategValue = value!;
       subCategValue = 'subcategory';
     });
+  }
+
+  Future<void> uploadImages() async {
+    if (mainCategValue != 'select category' && subCategValue != 'subcategory') {
+      if (_formKey.currentState!.validate()) {
+        _formKey.currentState!.save();
+        if (imagesFileList!.isNotEmpty) {
+          setState(() {
+            processing = true;
+          });
+          try {
+            for (var image in imagesFileList!) {
+              firebase_storage.Reference ref = firebase_storage
+                  .FirebaseStorage.instance
+                  .ref('services/${path.basename(image.path)}');
+              await ref.putFile(File(image.path)).whenComplete(() async {
+                await ref.getDownloadURL().then((value) {
+                  imagesUrlList.add(value);
+                });
+              });
+            }
+          } catch (e) {
+            print(e);
+          }
+        } else {
+          MyMessageHandler.showSnackbar(
+              _scafoldKey, 'please pick images first');
+        }
+      } else {
+        MyMessageHandler.showSnackbar(_scafoldKey, 'please fill all fields');
+      }
+    } else {
+      MyMessageHandler.showSnackbar(_scafoldKey, 'please select categories');
+    }
+  }
+
+
+Future<void> uploadData() async {
+    if (imagesUrlList.isNotEmpty) {
+      CollectionReference serviceRef =
+          FirebaseFirestore.instance.collection('services');
+
+      serId = const Uuid().v4();
+
+      await serviceRef.doc(serId).set({
+        'serid': serId,
+        'maincateg': mainCategValue,
+        'subcateg': subCategValue,
+        'price': price,
+        'sername': serName,
+        'serdesc': serDesc,
+        'sid': FirebaseAuth.instance.currentUser!.uid,
+        'proimages': imagesUrlList,
+        'discount': discount,
+      }).whenComplete(() {
+        setState(() {
+          processing = false;
+          imagesFileList = [];
+          mainCategValue = 'select category';
+          subCategValue = 'subcategory';
+
+          subCategoryList = [];
+          imagesUrlList = [];
+        });
+        _formKey.currentState!.reset();
+      });
+    } else {
+      print('no images');
+    }
+  }
+
+  void uploadProducts() async {
+    await uploadImages().whenComplete(() => uploadData());
   }
 
   @override
@@ -247,29 +325,7 @@ class _UploadProductScreenState extends State<UploadProductScreen> {
                       ),
                     ],
                   ),
-                  Padding(
-                    padding: const EdgeInsets.all(8.0),
-                    child: SizedBox(
-                      width: MediaQuery.of(context).size.width * 0.45,
-                      child: TextFormField(
-                          validator: (value) {
-                            if (value!.isEmpty) {
-                              return 'please enter Quantity';
-                            } else if (value.isValidQuantity() != true) {
-                              return 'not valid quantity';
-                            }
-                            return null;
-                          },
-                          onSaved: (value) {
-                            quantity = int.parse(value!);
-                          },
-                          keyboardType: TextInputType.number,
-                          decoration: textFormDecoration.copyWith(
-                            labelText: 'Quantity',
-                            hintText: 'Add quatity',
-                          )),
-                    ),
-                  ),
+                  
                   Padding(
                     padding: const EdgeInsets.all(8.0),
                     child: SizedBox(
@@ -277,18 +333,18 @@ class _UploadProductScreenState extends State<UploadProductScreen> {
                       child: TextFormField(
                           validator: (value) {
                             if (value!.isEmpty) {
-                              return 'please enter product name';
+                              return 'please enter service name';
                             }
                             return null;
                           },
                           onSaved: (value) {
-                            proName = value!;
+                            serName = value!;
                           },
                           maxLength: 100,
                           maxLines: 3,
                           decoration: textFormDecoration.copyWith(
-                            labelText: 'Product Name',
-                            hintText: 'Enter Product Name',
+                            labelText: 'Service Name',
+                            hintText: 'Enter Service Name',
                           )),
                     ),
                   ),
@@ -299,18 +355,18 @@ class _UploadProductScreenState extends State<UploadProductScreen> {
                       child: TextFormField(
                           validator: (value) {
                             if (value!.isEmpty) {
-                              return 'please enter product description';
+                              return 'please enter service description';
                             }
                             return null;
                           },
                           onSaved: (value) {
-                            proDesc = value!;
+                            serDesc = value!;
                           },
                           maxLength: 800,
                           maxLines: 5,
                           decoration: textFormDecoration.copyWith(
-                            labelText: 'Product Descriprion',
-                            hintText: 'Enter Product Description',
+                            labelText: 'Service Descriprion',
+                            hintText: 'Enter Service Description',
                           )),
                     ),
                   ),
@@ -341,10 +397,12 @@ class _UploadProductScreenState extends State<UploadProductScreen> {
               ),
             ),
             FloatingActionButton(
-              onPressed: processing == true ? null : () {},
+              onPressed: processing == true ? null : () {
+                uploadProducts();
+              },
               backgroundColor: Colors.teal,
               child: processing == true
-                  ? const CircularProgressIndicator()
+                  ? const CircularProgressIndicator(color: Colors.amber,)
                   : const Icon(Icons.upload),
             )
           ],

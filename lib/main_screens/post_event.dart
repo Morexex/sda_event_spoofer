@@ -1,9 +1,16 @@
 // ignore_for_file: avoid_print
 
 import 'dart:io';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
-import '../minor_screens/add_address.dart';
+import 'package:firebase_storage/firebase_storage.dart' as firebase_storage;
+import 'package:uuid/uuid.dart';
+import '../../minor_screens/add_address.dart';
+import 'package:path/path.dart' as path;
+
+import '../../widgets/snackbar.dart';
 import '../widgets/appbar_widgets.dart';
 
 class PostEvent extends StatefulWidget {
@@ -15,7 +22,7 @@ class PostEvent extends StatefulWidget {
 
 class _PostEventState extends State<PostEvent> {
   final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
-  final GlobalKey<ScaffoldMessengerState> _scafoldKey =
+  final GlobalKey<ScaffoldMessengerState> scafoldKey =
       GlobalKey<ScaffoldMessengerState>();
 
   late String eveName;
@@ -64,6 +71,68 @@ class _PostEventState extends State<PostEvent> {
         ),
       );
     }
+  }
+  Future<void> uploadImages() async {
+      if (_formKey.currentState!.validate()) {
+        _formKey.currentState!.save();
+        if (imagesFileList!.isNotEmpty) {
+          setState(() {
+            processing = true;
+          });
+          try {
+            for (var image in imagesFileList!) {
+              firebase_storage.Reference ref = firebase_storage
+                  .FirebaseStorage.instance
+                  .ref('events/${path.basename(image.path)}');
+              await ref.putFile(File(image.path)).whenComplete(() async {
+                await ref.getDownloadURL().then((value) {
+                  imagesUrlList.add(value);
+                });
+              });
+            }
+          } catch (e) {
+            print(e);
+          }
+        } else {
+          MyMessageHandler.showSnackbar(
+              scafoldKey, 'please pick images first');
+        }
+      } else {
+        MyMessageHandler.showSnackbar(scafoldKey, 'please fill all fields');
+      }
+    
+  }
+
+
+Future<void> uploadData() async {
+    if (imagesUrlList.isNotEmpty) {
+      CollectionReference eventsRef =
+          FirebaseFirestore.instance.collection('events');
+
+      eveId = const Uuid().v4();
+
+      await eventsRef.doc(eveId).set({
+        'eveid': eveId,
+        'evename': eveName,
+        'evedesc': eveDesc,
+        'sid': FirebaseAuth.instance.currentUser!.uid,
+        'gid': FirebaseAuth.instance.currentUser!.uid,
+        'proimages': imagesUrlList,
+      }).whenComplete(() {
+        setState(() {
+          processing = false;
+          imagesFileList = [];
+          imagesUrlList = [];
+        });
+        _formKey.currentState!.reset();
+      });
+    } else {
+      print('no images');
+    }
+  }
+
+  void uploadEvent() async {
+    await uploadImages().whenComplete(() => uploadData());
   }
 
   @override
@@ -115,7 +184,7 @@ class _PostEventState extends State<PostEvent> {
                   child: TextFormField(
                       validator: (value) {
                         if (value!.isEmpty) {
-                          return 'please enter product name';
+                          return 'please enter Event name';
                         }
                         return null;
                       },
@@ -178,10 +247,12 @@ class _PostEventState extends State<PostEvent> {
             ),
           ),
           FloatingActionButton(
-            onPressed: processing == true ? null : () {},
+            onPressed: processing == true ? null : () {
+              uploadEvent();
+            },
             backgroundColor: Colors.teal,
             child: processing == true
-                ? const CircularProgressIndicator()
+                ? const CircularProgressIndicator(color: Colors.amber,)
                 : const Icon(Icons.upload),
           )
         ],
