@@ -2,6 +2,17 @@ import 'package:flutter/material.dart';
 import 'package:sda_event_spoofer/main_screens/stores_screen.dart';
 import 'package:sda_event_spoofer/minor_screens/search_screen.dart';
 
+import '../gallery/audio_recording.dart';
+import '../gallery/catering_gallery.dart';
+import '../gallery/decoration_gallery.dart';
+import '../gallery/graphics_gallery.dart';
+import '../gallery/other_gallery.dart';
+import '../gallery/photography.dart';
+import '../gallery/sound_system_gallery.dart';
+import '../gallery/tents_chairs_gallery.dart';
+import '../gallery/transport_gallery.dart';
+import '../gallery/video_recording.dart';
+
 class ServicesPageScreen extends StatefulWidget {
   const ServicesPageScreen({super.key});
 
@@ -13,8 +24,9 @@ class _ServicesPageScreenState extends State<ServicesPageScreen> {
   @override
   Widget build(BuildContext context) {
     return DefaultTabController(
-      length: 9,
+      length: 10,
       child: Scaffold(
+        backgroundColor: Colors.blueGrey.shade100.withOpacity(0.5),
         appBar: AppBar(
           elevation: 0,
           backgroundColor: Colors.white,
@@ -73,26 +85,33 @@ class _ServicesPageScreenState extends State<ServicesPageScreen> {
                 RepeatedTab(label: 'Decoration'),
                 RepeatedTab(label: 'Tent & Chairs Rent'),
                 RepeatedTab(label: 'Sound System Hiring'),
+                RepeatedTab(label: 'Others'),
               ]),
         ),
         body: const TabBarView(children: [
-          Center(child: Text('Graphics')),
-          Center(child: Text('Audio Recording')),
-          Center(child: Text('Photography')),
-          Center(child: Text('Video Recording')),
-          Center(child: Text('Transport')),
-          Center(child: Text('Catering')),
-          Center(child: Text('Decoration')),
-          Center(child: Text('Tent & Chairs Rent')),
-          Center(child: Text('Sound System Hiring')),
+          GraphicsGalleryScreen(),
+          AudioRecordingScreen(),
+          PhotographyScreen(),
+          VideoRecordingScreen(),
+          TransportScreen(),
+          CateringScreen(),
+          DecorationScreen(),
+          TentsChairsScreen(),
+          SoundSystemScreen(),
+          OthersScreen(),
         ]),
         floatingActionButton: FloatingActionButton(
-        onPressed: (){
-          Navigator.push(context, MaterialPageRoute(builder: (context)=> const StoresScreen()));
-        },
-        backgroundColor: Colors.amber,
-        hoverColor: Colors.tealAccent,
-        child: const Icon(Icons.store,color: Colors.teal,size: 35,),
+          onPressed: () {
+            Navigator.push(context,
+                MaterialPageRoute(builder: (context) => const StoresScreen()));
+          },
+          backgroundColor: Colors.amber,
+          hoverColor: Colors.tealAccent,
+          child: const Icon(
+            Icons.store,
+            color: Colors.teal,
+            size: 35,
+          ),
         ),
       ),
     );

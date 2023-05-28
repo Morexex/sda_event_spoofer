@@ -1,4 +1,5 @@
 import 'package:animated_text_kit/animated_text_kit.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:sda_event_spoofer/widgets/big_text.dart';
@@ -23,6 +24,9 @@ class WelcomeScreen extends StatefulWidget {
 
 class _WelcomeScreenState extends State<WelcomeScreen> {
   bool processing = false;
+  CollectionReference anonymous =
+      FirebaseFirestore.instance.collection("anonymous");
+  late String _uid;
   @override
   Widget build(BuildContext context) {
     return Container(
@@ -102,21 +106,40 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
             ),
             processing == true
                 ? const CircularProgressIndicator()
-                : SocialMediaButtons(
-                    label: 'Guest',
-                    onPressed: () async {
-                      setState(() {
-                        processing = true;
-                      });
-                      await FirebaseAuth.instance.signInAnonymously();
-                      await Future.delayed(const Duration(microseconds: 100))
-                          .whenComplete(() => Navigator.pushReplacementNamed(
-                              context, '/general_home'));
-                    },
-                    child: const Image(
-                      image: AssetImage('images/inapp/guest.jpg'),
+                : CircleAvatar(
+                  backgroundColor: Colors.teal,
+                  radius: 45,
+                  child: SocialMediaButtons(
+                      onPressed: () async {
+                        await FirebaseAuth.instance
+                            .signInAnonymously()
+                            .whenComplete(() async {
+                          _uid = FirebaseAuth.instance.currentUser!.uid;
+                          await anonymous.doc(_uid).set({
+                            'name': '',
+                            'email': '',
+                            'profileimage': '',
+                            'phone': '',
+                            'address': '',
+                            'gid': _uid,
+                          });
+                        });
+                
+                        setState(() {
+                          processing = true;
+                        });
+                        await Future.delayed(const Duration(microseconds: 100))
+                            .whenComplete(() => Navigator.pushReplacementNamed(
+                                context, '/general_home'));
+                      },
+                      label: 'Guest',
+                      child: const Icon(
+                        Icons.person,
+                        size: 55,
+                        color: Colors.amber,
+                      ),
                     ),
-                  )
+                )
           ],
         ),
       ),
