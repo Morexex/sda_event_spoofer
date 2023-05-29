@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import 'package:sda_event_spoofer/main_screens/main_event_page.dart';
 import 'package:sda_event_spoofer/main_screens/profile.dart';
 import 'package:sda_event_spoofer/main_screens/services_page.dart';
-
+import 'package:badges/badges.dart' as badges;
+import '../../providers/bookings_provider.dart';
 import '../bookings_page.dart';
 import '../events_page.dart';
 
@@ -21,7 +23,7 @@ class _GeneralScreenState extends State<GeneralScreen> {
     ServicesPageScreen(),
     BookingScreen(),
     ProfileScreen(),
-  ] ;
+  ];
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -31,16 +33,30 @@ class _GeneralScreenState extends State<GeneralScreen> {
         selectedItemColor: Colors.teal,
         unselectedItemColor: Colors.black,
         currentIndex: selectedIndex,
-        items: const [
-          BottomNavigationBarItem(icon: Icon(Icons.home), label: 'Home'),
-          BottomNavigationBarItem(icon: Icon(Icons.event), label: 'Events'),
-          BottomNavigationBarItem(
+        items: [
+          const BottomNavigationBarItem(icon: Icon(Icons.home), label: 'Home'),
+          const BottomNavigationBarItem(
+              icon: Icon(Icons.event), label: 'Events'),
+          const BottomNavigationBarItem(
               icon: Icon(Icons.design_services), label: 'Services'),
           BottomNavigationBarItem(
-              icon: Icon(Icons.book_online), label: 'My Bookings'),
-          BottomNavigationBarItem(icon: Icon(Icons.person), label: 'Profile'),
+            icon: badges.Badge(
+                showBadge: context.read<Book>().getItems.isEmpty ? false : true,
+                badgeStyle: const badges.BadgeStyle(badgeColor: Colors.amber),
+                badgeContent: Text(
+                  context.watch<Book>().getItems.length.toString(),
+                  style: const TextStyle(
+                      fontSize: 14,
+                      color: Colors.black,
+                      fontWeight: FontWeight.w600),
+                ),
+                child: const Icon(Icons.book_online)),
+            label: 'Bookings',
+          ),
+          const BottomNavigationBarItem(
+              icon: Icon(Icons.person), label: 'Profile'),
         ],
-        onTap: (index){
+        onTap: (index) {
           setState(() {
             selectedIndex = index;
           });

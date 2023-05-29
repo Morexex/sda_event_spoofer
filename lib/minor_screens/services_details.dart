@@ -1,4 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:collection/collection.dart';
 import 'package:expandable/expandable.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_swiper_null_safety/flutter_swiper_null_safety.dart';
@@ -10,8 +11,11 @@ import 'package:badges/badges.dart' as badges;
 
 import '../main_screens/bookings_page.dart';
 import '../models/services_model.dart';
+import '../providers/bookings_provider.dart';
+import '../providers/mychoice_provider.dart';
 import '../widgets/appbar_widgets.dart';
 import '../widgets/repeated_button_widget.dart';
+import '../widgets/snackbar.dart';
 import 'full_screen_view.dart';
 
 class ServiceDetailsScreen extends StatefulWidget {
@@ -33,6 +37,9 @@ class _ServiceDetailsScreenState extends State<ServiceDetailsScreen> {
       GlobalKey<ScaffoldMessengerState>();
   @override
   Widget build(BuildContext context) {
+    var onSale = widget.serList['discount'];
+    var existingServiceBook = context.read<Book>().getItems.firstWhereOrNull(
+        (service) => service.documentId == widget.serList['serid']);
     final Stream<QuerySnapshot> servicesStream = FirebaseFirestore.instance
         .collection('services')
         .where('maincateg', isEqualTo: widget.serList['maincateg'])
@@ -121,32 +128,76 @@ class _ServiceDetailsScreenState extends State<ServiceDetailsScreen> {
                             ),
                             Text(
                               widget.serList['price'].toStringAsFixed(2),
-                              style: const TextStyle(
-                                  color: Colors.red,
-                                  fontSize: 16,
-                                  fontWeight: FontWeight.w600),
+                              style: onSale != 0
+                                  ? const TextStyle(
+                                      color: Colors.grey,
+                                      fontSize: 11,
+                                      decoration: TextDecoration.lineThrough,
+                                      fontWeight: FontWeight.w600)
+                                  : const TextStyle(
+                                      color: Colors.red,
+                                      fontSize: 16,
+                                      fontWeight: FontWeight.w600),
                             ),
                             const SizedBox(
                               width: 6,
                             ),
-                            const Text(
-                              '20',
-                              style: TextStyle(
-                                  color: Colors.red,
-                                  fontSize: 16,
-                                  fontWeight: FontWeight.w600),
-                            )
+                            onSale != 0
+                                ? Text(
+                                    ((1 - (widget.serList['discount'] / 100)) *
+                                            widget.serList['price'])
+                                        .toStringAsFixed(2),
+                                    style: const TextStyle(
+                                        color: Colors.red,
+                                        fontSize: 16,
+                                        fontWeight: FontWeight.w600),
+                                  )
+                                : const Text(''),
                           ],
                         ),
                       ],
                     ),
                     IconButton(
-                        onPressed: () {},
-                        icon: const Icon(
-                          Icons.favorite_outline,
-                          color: Colors.red,
-                          size: 30,
-                        )),
+                        onPressed: () {
+                          var existingServiceWishlist = context
+                              .read<Wish>()
+                              .getWishItems
+                              .firstWhereOrNull((product) =>
+                                  product.documentId == widget.serList['serid']);
+                          existingServiceWishlist != null
+                              ? context
+                                  .read<Wish>()
+                                  .removeThis(widget.serList['serid'])
+                              : context.read<Wish>().addWishItem(
+                                    widget.serList['sername'],
+                                    onSale != 0
+                                        ? ((1 -
+                                                (widget.serList['discount'] /
+                                                    100)) *
+                                            widget.serList['price'])
+                                        : widget.serList['price'],
+                                    widget.serList['proimages'],
+                                    widget.serList['serid'],
+                                    widget.serList['sid'],
+                                  );
+                        },
+                        icon: context
+                                    .watch<Wish>()
+                                    .getWishItems
+                                    .firstWhereOrNull((service) =>
+                                        service.documentId ==
+                                        widget.serList['serid']) !=
+                                null
+                            ? const Icon(
+                                Icons.favorite,
+                                color: Colors.red,
+                                size: 30,
+                              )
+                            : const Icon(
+                                Icons.favorite_outline,
+                                color: Colors.red,
+                                size: 30,
+                              )),
                   ],
                 ),
                 const ProductDetailsHeaderLabel(
@@ -260,7 +311,27 @@ class _ServiceDetailsScreenState extends State<ServiceDetailsScreen> {
                   ],
                 ),
                 RepeatedButton(
-                    label: 'Add To Bookings', onPressed: () {}, width: 0.5)
+                    label: existingServiceBook != null
+                        ? 'Added to Cart'
+                        : 'Add To Cart',
+                    onPressed: () {
+                      if (existingServiceBook != null) {
+                        MyMessageHandler.showSnackbar(
+                            _scafoldKey, 'this item is already in your cart');
+                      } else {
+                        context.read<Book>().addItem(
+                              widget.serList['sername'],
+                              onSale != 0
+                                  ? ((1 - (widget.serList['discount'] / 100)) *
+                                      widget.serList['price'])
+                                  : widget.serList['price'],
+                              widget.serList['proimages'],
+                              widget.serList['serid'],
+                              widget.serList['sid'],
+                            );
+                      }
+                    },
+                    width: 0.5)
               ],
             ),
           ),

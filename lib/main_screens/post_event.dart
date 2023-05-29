@@ -27,6 +27,7 @@ class _PostEventState extends State<PostEvent> {
 
   late String eveName;
   late String eveDesc;
+  late String eveDate;
   late String eveId;
 
   bool processing = false;
@@ -115,6 +116,7 @@ Future<void> uploadData() async {
         'eveid': eveId,
         'evename': eveName,
         'evedesc': eveDesc,
+        'evedate': eveDate,
         'sid': FirebaseAuth.instance.currentUser!.uid,
         'gid': FirebaseAuth.instance.currentUser!.uid,
         'proimages': imagesUrlList,
@@ -218,6 +220,28 @@ Future<void> uploadData() async {
                       decoration: textFormDecoration.copyWith(
                         labelText: 'Event Descriprion',
                         hintText: 'Enter Event Description',
+                      )),
+                ),
+              ),
+              Padding(
+                padding: const EdgeInsets.all(8.0),
+                child: SizedBox(
+                  width: MediaQuery.of(context).size.width,
+                  child: TextFormField(
+                      validator: (value) {
+                        if (value!.isEmpty) {
+                          return 'please enter event date';
+                        }
+                        return null;
+                      },
+                      onSaved: (value) {
+                        eveDesc = value!;
+                      },
+                      maxLength: 800,
+                      maxLines: 5,
+                      decoration: textFormDecoration.copyWith(
+                        labelText: 'Event Date',
+                        hintText: 'Enter Event period',
                       )),
                 ),
               ),

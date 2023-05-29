@@ -1,17 +1,28 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import 'package:sda_event_spoofer/auth/general_login.dart';
 import 'package:sda_event_spoofer/auth/general_signup.dart';
 import 'package:sda_event_spoofer/auth/supplier_login.dart';
 import 'package:sda_event_spoofer/auth/supplier_signup.dart';
+import 'package:sda_event_spoofer/providers/bookings_provider.dart';
+import 'package:sda_event_spoofer/providers/mychoice_provider.dart';
 import 'main_screens/general_screens/general_screen.dart';
 import 'main_screens/service_providers/services_screen.dart';
 import 'main_screens/welcome_screen.dart';
 import 'package:firebase_core/firebase_core.dart';
 
-void main()async {
+void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp();
-  runApp(const MyApp());
+  runApp(
+    MultiProvider(
+      providers: [
+        ChangeNotifierProvider(create: (_) => Book()),
+        ChangeNotifierProvider(create: (_) => Wish()),
+      ],
+      child: const MyApp(),
+    ),
+  );
 }
 
 class MyApp extends StatelessWidget {
@@ -34,5 +45,3 @@ class MyApp extends StatelessWidget {
     );
   }
 }
-
-
