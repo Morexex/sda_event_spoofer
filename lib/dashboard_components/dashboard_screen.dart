@@ -1,9 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:sda_event_spoofer/dashboard_components/services_orders.dart';
+import 'package:sda_event_spoofer/dashboard_components/supp_balance.dart';
 import 'package:sda_event_spoofer/dashboard_components/supplier_statics.dart';
 import '../widgets/appbar_widgets.dart';
-import '../main_screens/welcome_screen.dart';
-import 'balance.dart';
 import 'edit_business.dart';
 import 'manage_services.dart';
 import 'my_store.dart';
@@ -12,7 +11,7 @@ List<String> label = [
   'My Store',
   'orders',
   'edit profile',
-  'manage products',
+  'manage services',
   'balance',
   'statics'
 ];
@@ -72,9 +71,10 @@ class DashBoardScreen extends StatelessWidget {
               },
               child: Card(
                 elevation: 20,
-                shadowColor: Colors.yellowAccent.shade200,
+                shadowColor: Colors.tealAccent,
                 color: Colors.blueGrey.withOpacity(0.7),
                 child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.center,
                   mainAxisAlignment: MainAxisAlignment.spaceAround,
                   children: [
                     Icon(
@@ -82,14 +82,16 @@ class DashBoardScreen extends StatelessWidget {
                       color: Colors.amber,
                       size: 50,
                     ),
-                    Text(
-                      label[index].toLowerCase(),
-                      style: const TextStyle(
-                          fontSize: 24,
-                          color: Colors.amber,
-                          letterSpacing: 2,
-                          fontWeight: FontWeight.w600,
-                          fontFamily: 'Acme'),
+                    Center(
+                      child: Text(
+                        label[index].toLowerCase(),
+                        style: const TextStyle(
+                            fontSize: 24,
+                            color: Colors.amber,
+                            letterSpacing: 2,
+                            fontWeight: FontWeight.w600,
+                            fontFamily: 'Acme'),
+                      ),
                     )
                   ],
                 ),

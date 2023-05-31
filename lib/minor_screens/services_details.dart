@@ -8,7 +8,6 @@ import 'package:staggered_grid_view_flutter/widgets/staggered_grid_view.dart';
 import 'package:staggered_grid_view_flutter/widgets/staggered_tile.dart';
 import 'package:provider/provider.dart';
 import 'package:badges/badges.dart' as badges;
-
 import '../main_screens/bookings_page.dart';
 import '../models/services_model.dart';
 import '../providers/bookings_provider.dart';
@@ -31,10 +30,20 @@ class ServiceDetailsScreen extends StatefulWidget {
 }
 
 class _ServiceDetailsScreenState extends State<ServiceDetailsScreen> {
-  late List<dynamic> imagesList = widget.serList['proimages'];
+  late final Stream<QuerySnapshot> servicesStream = FirebaseFirestore.instance
+      .collection('services')
+      .where('maincateg', isEqualTo: widget.serList['maincateg'])
+      .where('subcateg', isEqualTo: widget.serList['subcateg'])
+      .snapshots();
+  late final Stream<QuerySnapshot> reviewsStream = FirebaseFirestore.instance
+      .collection('services')
+      .doc(widget.serList['serid'])
+      .collection('reviews')
+      .snapshots();
 
   final GlobalKey<ScaffoldMessengerState> _scafoldKey =
       GlobalKey<ScaffoldMessengerState>();
+  late List<dynamic> imagesList = widget.serList['proimages'];
   @override
   Widget build(BuildContext context) {
     var onSale = widget.serList['discount'];
@@ -163,7 +172,8 @@ class _ServiceDetailsScreenState extends State<ServiceDetailsScreen> {
                               .read<Wish>()
                               .getWishItems
                               .firstWhereOrNull((product) =>
-                                  product.documentId == widget.serList['serid']);
+                                  product.documentId ==
+                                  widget.serList['serid']);
                           existingServiceWishlist != null
                               ? context
                                   .read<Wish>()
@@ -200,7 +210,7 @@ class _ServiceDetailsScreenState extends State<ServiceDetailsScreen> {
                               )),
                   ],
                 ),
-                const ProductDetailsHeaderLabel(
+                const ServiceDetailsHeaderLabel(
                   label: '  Event Description  ',
                 ),
                 Text(
@@ -216,15 +226,14 @@ class _ServiceDetailsScreenState extends State<ServiceDetailsScreen> {
                   children: [
                     const Positioned(right: 50, top: 15, child: Text('Total')),
                     ExpandableTheme(
-                      data: const ExpandableThemeData(
-                        iconSize: 30,
-                        iconColor: Colors.blue,
-                      ),
-                      child: const Text('Reviews under dev'),
-                    ),
+                        data: const ExpandableThemeData(
+                          iconSize: 30,
+                          iconColor: Colors.blue,
+                        ),
+                        child: reviews(reviewsStream)),
                   ],
                 ),
-                const ProductDetailsHeaderLabel(
+                const ServiceDetailsHeaderLabel(
                   label: '  Similar Events  ',
                 ),
                 SizedBox(
@@ -307,17 +316,29 @@ class _ServiceDetailsScreenState extends State<ServiceDetailsScreen> {
                                         back: AppBarBackButton(),
                                       )));
                         },
-                        icon: const Icon(Icons.shopping_cart)),
+                        icon: badges.Badge(
+                            showBadge: context.read<Book>().getItems.isEmpty
+                                ? false
+                                : true,
+                            badgeStyle: const badges.BadgeStyle(
+                                badgeColor: Colors.amber),
+                            badgeContent: Text(
+                              context.watch<Book>().getItems.length.toString(),
+                              style: const TextStyle(
+                                  fontSize: 14,
+                                  color: Colors.black,
+                                  fontWeight: FontWeight.w600),
+                            ),
+                            child: const Icon(Icons.book_online))),
                   ],
                 ),
                 RepeatedButton(
-                    label: existingServiceBook != null
-                        ? 'Added to Cart'
-                        : 'Add To Cart',
+                    label:
+                        existingServiceBook != null ? 'Booked' : 'Add Booking',
                     onPressed: () {
                       if (existingServiceBook != null) {
-                        MyMessageHandler.showSnackbar(
-                            _scafoldKey, 'this item is already in your cart');
+                        MyMessageHandler.showSnackbar(_scafoldKey,
+                            'this item is already in your booking');
                       } else {
                         context.read<Book>().addItem(
                               widget.serList['sername'],
@@ -341,9 +362,9 @@ class _ServiceDetailsScreenState extends State<ServiceDetailsScreen> {
   }
 }
 
-class ProductDetailsHeaderLabel extends StatelessWidget {
+class ServiceDetailsHeaderLabel extends StatelessWidget {
   final String label;
-  const ProductDetailsHeaderLabel({
+  const ServiceDetailsHeaderLabel({
     super.key,
     required this.label,
   });

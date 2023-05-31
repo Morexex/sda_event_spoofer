@@ -3,10 +3,12 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:sda_event_spoofer/main_screens/bookings_page.dart';
-import 'package:sda_event_spoofer/main_screens/general_screens/general_orders.dart';
 import 'package:sda_event_spoofer/main_screens/general_screens/my_choice.dart';
+import 'package:sda_event_spoofer/minor_screens/customer_orders.dart';
 import 'package:sda_event_spoofer/widgets/appbar_widgets.dart';
 
+import '../minor_screens/address_book.dart';
+import '../minor_screens/change_password.dart';
 import '../widgets/alert_dialogue.dart';
 import '../widgets/profile_header.dart';
 import '../widgets/repeated_list.dart.dart';
@@ -219,7 +221,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                           0.2,
                                       child: const Center(
                                         child: Text(
-                                          'Tickets',
+                                          'Orders',
                                           style: TextStyle(fontSize: 20),
                                         ),
                                       ),
@@ -229,7 +231,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                           context,
                                           MaterialPageRoute(
                                               builder: (context) =>
-                                                  const GeneralTicketsScreen()));
+                                                  const CustomerOrdersScreen()));
                                     },
                                   ),
                                 ),
@@ -308,7 +310,13 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                           onPressed: FirebaseAuth.instance
                                                   .currentUser!.isAnonymous
                                               ? null
-                                              : () {},
+                                              : () {
+                                                  Navigator.push(
+                                                      context,
+                                                      MaterialPageRoute(
+                                                          builder: (context) =>
+                                                              const AddressBook()));
+                                                },
                                           title: 'Address',
                                           subTitle: data['address'] == ''
                                               ? 'example@kangaru-Embu'
@@ -341,7 +349,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                         RepeatedListTile(
                                           title: 'Change Password',
                                           icon: Icons.lock,
-                                          onPressed: () {},
+                                          onPressed: () {
+
+                                            Navigator.push(context, MaterialPageRoute(builder: (context) => const ChangePassword()));
+                                          },
                                         ),
                                         const PurpleDivider(),
                                         RepeatedListTile(

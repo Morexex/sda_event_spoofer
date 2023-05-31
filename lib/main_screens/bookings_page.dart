@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:sda_event_spoofer/minor_screens/place_order.dart';
 
 import '../models/book_model.dart';
 import '../providers/bookings_provider.dart';
@@ -82,7 +83,12 @@ class _BookingScreenState extends State<BookingScreen> {
                   height: 35,
                   width: MediaQuery.of(context).size.width * 0.45,
                   child: MaterialButton(
-                    onPressed: () {},
+                    onPressed: () {
+                      Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                              builder: (context) => const PlaceOrderScreen()));
+                    },
                     child: const Text('Buy Service'),
                   ))
             ],

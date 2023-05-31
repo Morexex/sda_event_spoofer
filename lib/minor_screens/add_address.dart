@@ -1,3 +1,5 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:country_state_city_picker/country_state_city_picker.dart';
 import 'package:uuid/uuid.dart';
@@ -125,7 +127,41 @@ class _AddAddressState extends State<AddAddress> {
                 ),
                 Center(
                   child: RepeatedButton(
-                      label: 'Add New Address', onPressed: () {}, width: 0.8),
+                      label: 'Add New Address',
+                      onPressed: () async {
+                        if (formKey.currentState!.validate()) {
+                          if (countryValue != 'Choose Country' &&
+                              stateValue != 'Choose City' &&
+                              cityValue != 'Choose Town') {
+                            formKey.currentState!.save();
+
+                           CollectionReference addressReference = FirebaseFirestore.instance
+                                .collection('genusers')
+                                .doc(FirebaseAuth.instance.currentUser!.uid)
+                                .collection('address');
+                                var addressId =const  Uuid().v4();
+                                await addressReference.doc(addressId).set({
+                                  'addressid': addressId,
+                                  'fname':firstName,
+                                  'lname':lastName,
+                                  'phone':phone,
+                                  'country':countryValue,
+                                  'state':stateValue,
+                                  'city':cityValue,
+                                  'default':true,
+
+
+                                }).whenComplete(() => Navigator.pop(context));
+                          } else {
+                            MyMessageHandler.showSnackbar(
+                                _scafoldKey, 'please set your location');
+                          }
+                        } else {
+                          MyMessageHandler.showSnackbar(
+                              _scafoldKey, 'please fill all fields');
+                        }
+                      },
+                      width: 0.8),
                 ),
                 const SizedBox(
                   height: 50,
